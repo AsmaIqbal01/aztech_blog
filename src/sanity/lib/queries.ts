@@ -1,11 +1,52 @@
-import { defineQuery } from "next-sanity";
+import { defineQuery } from 'next-sanity'
 
-// Query for multiple posts
-export const POSTS_QUERY = defineQuery(`*[_type == "post" && defined(slug.current)][0...12]{
-  _id, title, slug
-}`);
+export const POSTS_QUERY = defineQuery(`*[_type == "post" && defined(slug.current)]|order(publishedAt desc)[0...12]{
+  _id,
+  title,
+  slug,
+  body,
+  mainImage,
+  publishedAt,
+  "categories": coalesce(
+    categories[]->{
+      _id,
+      slug,
+      title
+    },
+    []
+  ),
+  author->{
+    name,
+    image
+  }
+}`)
 
-// Query for a single post by slug
+export const POSTS_SLUGS_QUERY = defineQuery(`*[_type == "post" && defined(slug.current)]{ 
+  "slug": slug.current
+}`)
+
 export const POST_QUERY = defineQuery(`*[_type == "post" && slug.current == $slug][0]{
-  title, body, mainImage
-}`);
+  _id,
+  title,
+  body,
+  mainImage,
+  publishedAt,
+  "categories": coalesce(
+    categories[]->{
+      _id,
+      slug,
+      title
+    },
+    []
+  ),
+  author->{
+    name,
+    image
+  },
+  "comments": *[_type == "comment" && post._ref == ^._id && approved == true]{
+    _id,
+    text,
+    author,
+    createdAt
+  }
+}`)
